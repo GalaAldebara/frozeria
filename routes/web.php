@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\BantuanController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -35,5 +37,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('items', ItemController::class);
 
     Route::resource('kategori', KategoriController::class);
+
+    Route::resource('bantuan', BantuanController::class);
 
 });

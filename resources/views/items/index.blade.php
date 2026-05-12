@@ -2,7 +2,6 @@
 
 @section('content')
     <style>
-        /* ── PAGE VARS (inherit dari layout, override lokal jika perlu) ── */
         :root {
             --green-50: #edfaf3;
             --green-100: #c6f0d9;
@@ -302,7 +301,6 @@
             vertical-align: middle;
         }
 
-        /* foto thumbnail */
         .item-thumb {
             width: 56px;
             height: 56px;
@@ -332,7 +330,6 @@
             stroke-linejoin: round;
         }
 
-        /* nama barang */
         .item-name {
             font-weight: 600;
             color: var(--gray-900);
@@ -344,7 +341,19 @@
             margin-top: 2px;
         }
 
-        /* badge stok */
+        .kode-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'DM Mono', 'Courier New', monospace;
+            padding: 3px 10px;
+            background: var(--gray-100);
+            color: var(--gray-600);
+            border: 1px solid var(--gray-200);
+            border-radius: 6px;
+            letter-spacing: 0.04em;
+        }
+
         .badge {
             display: inline-block;
             font-size: 12px;
@@ -368,7 +377,6 @@
             color: var(--red-700);
         }
 
-        /* aksi col */
         .aksi-group {
             display: flex;
             align-items: center;
@@ -376,7 +384,6 @@
             flex-wrap: nowrap;
         }
 
-        /* empty state */
         .empty-state {
             padding: 52px 20px;
             text-align: center;
@@ -403,6 +410,104 @@
         .empty-state small {
             font-size: 13px;
             color: var(--gray-400);
+        }
+
+        /* ── PAGINATION ── */
+        .pagination-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--gray-400);
+        }
+
+        .pagination-info strong {
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        .pagination-nav {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* tombol halaman dasar */
+        .pg-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid var(--gray-200);
+            background: var(--white);
+            color: var(--gray-600);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .15s, border-color .15s, color .15s;
+            user-select: none;
+        }
+
+        .pg-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .pg-btn:hover {
+            background: var(--green-50);
+            border-color: var(--green-100);
+            color: var(--green-600);
+        }
+
+        /* halaman aktif */
+        .pg-btn.active {
+            background: var(--green-500);
+            border-color: var(--green-500);
+            color: var(--white);
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .pg-btn.active:hover {
+            background: var(--green-500);
+            border-color: var(--green-500);
+            color: var(--white);
+        }
+
+        /* disabled (prev di halaman 1 / next di halaman terakhir) */
+        .pg-btn.disabled {
+            color: var(--gray-200);
+            border-color: var(--gray-200);
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* separator "..." */
+        .pg-dots {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            font-size: 13px;
+            color: var(--gray-400);
+            user-select: none;
         }
 
         /* ── MODAL ── */
@@ -547,17 +652,19 @@
             .aksi-group {
                 flex-wrap: wrap;
             }
+
+            .pagination-wrap {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 
-    {{-- ══════════════════
-     STAT CARDS
-══════════════════ --}}
+    {{-- STAT CARDS --}}
     <div class="stats-grid">
-
         <div class="stat-card">
-            <div class="stat-card-icon" style="background: var(--green-50);">
-                <svg style="stroke: var(--green-500);" viewBox="0 0 24 24">
+            <div class="stat-card-icon" style="background:var(--green-50);">
+                <svg style="stroke:var(--green-500);" viewBox="0 0 24 24">
                     <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
                     <path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z" />
                 </svg>
@@ -566,10 +673,9 @@
             <span class="stat-card-value">{{ $totalBarang }}</span>
             <span class="stat-card-sub">Semua data barang</span>
         </div>
-
         <div class="stat-card">
-            <div class="stat-card-icon" style="background: #eff6ff;">
-                <svg style="stroke: #3b82f6;" viewBox="0 0 24 24">
+            <div class="stat-card-icon" style="background:#eff6ff;">
+                <svg style="stroke:#3b82f6;" viewBox="0 0 24 24">
                     <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
                     <circle cx="7" cy="7" r="1.5" fill="#3b82f6" stroke="none" />
                 </svg>
@@ -578,37 +684,32 @@
             <span class="stat-card-value">{{ $totalKategori }}</span>
             <span class="stat-card-sub">Semua kategori barang</span>
         </div>
-
         <div class="stat-card">
-            <div class="stat-card-icon" style="background: var(--amber-50);">
-                <svg style="stroke: #f59e0b;" viewBox="0 0 24 24">
+            <div class="stat-card-icon" style="background:var(--amber-50);">
+                <svg style="stroke:#f59e0b;" viewBox="0 0 24 24">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     <line x1="12" y1="9" x2="12" y2="13" />
                     <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
             </div>
             <span class="stat-card-label">Stok Menipis</span>
-            <span class="stat-card-value" style="color: var(--amber-600);">{{ $stokMenipis }}</span>
+            <span class="stat-card-value" style="color:var(--amber-600);">{{ $stokMenipis }}</span>
             <span class="stat-card-sub">Stok kurang dari 20</span>
         </div>
-
         <div class="stat-card">
-            <div class="stat-card-icon" style="background: var(--red-100);">
-                <svg style="stroke: var(--red-600);" viewBox="0 0 24 24">
+            <div class="stat-card-icon" style="background:var(--red-100);">
+                <svg style="stroke:var(--red-600);" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
                 </svg>
             </div>
             <span class="stat-card-label">Stok Habis</span>
-            <span class="stat-card-value" style="color: var(--red-600);">{{ $stokHabis }}</span>
+            <span class="stat-card-value" style="color:var(--red-600);">{{ $stokHabis }}</span>
             <span class="stat-card-sub">Stok = 0</span>
         </div>
-
     </div>
 
-    {{-- ══════════════════
-     PAGE HEADER
-══════════════════ --}}
+    {{-- PAGE HEADER --}}
     <div class="page-header">
         <h1 class="page-header-title">Daftar Barang</h1>
         <a href="{{ route('items.create') }}" class="btn btn-green">
@@ -620,17 +721,14 @@
         </a>
     </div>
 
-    {{-- ══════════════════
-     FILTER & SEARCH
-══════════════════ --}}
+    {{-- FILTER & SEARCH --}}
     <form id="filterForm" action="{{ route('items.index') }}" method="GET" class="filter-bar">
-
         <div class="search-wrap">
             <svg viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input type="text" id="searchInput" name="search" placeholder="Cari nama barang atau SKU..."
+            <input type="text" id="searchInput" name="search" placeholder="Cari nama barang, SKU, atau kode..."
                 value="{{ request('search') }}" autocomplete="off">
         </div>
 
@@ -643,10 +741,9 @@
             @endforeach
         </select>
 
-        {{-- Fallback: tombol cari tetap ada --}}
         <button type="submit" class="btn"
-            style="background: var(--white); color: var(--gray-600); border-color: var(--gray-200);">
-            <svg viewBox="0 0 24 24" style="stroke: var(--gray-600);">
+            style="background:var(--white);color:var(--gray-600);border-color:var(--gray-200);">
+            <svg viewBox="0 0 24 24" style="stroke:var(--gray-600);">
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -655,44 +752,41 @@
 
         @if (request('search') || request('kategori_id'))
             <a href="{{ route('items.index') }}" class="btn"
-                style="background: var(--white); color: var(--gray-400); border-color: var(--gray-200);">
-                <svg viewBox="0 0 24 24" style="stroke: var(--gray-400);">
+                style="background:var(--white);color:var(--gray-400);border-color:var(--gray-200);">
+                <svg viewBox="0 0 24 24" style="stroke:var(--gray-400);">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
                 Reset
             </a>
         @endif
-
     </form>
 
-    {{-- ══════════════════
-     TABLE
-══════════════════ --}}
+    {{-- TABLE --}}
     <div class="table-wrap">
         <table class="data-table">
-
             <thead>
                 <tr>
-                    <th style="width: 44px;">#</th>
-                    <th style="width: 72px;">Foto</th>
+                    <th style="width:44px;">#</th>
+                    <th style="width:72px;">Foto</th>
                     <th>Nama Barang</th>
+                    <th>Kode</th>
                     <th>Kategori</th>
                     <th>Stok</th>
                     <th>Harga</th>
-                    <th style="width: 180px;">Aksi</th>
+                    <th style="width:180px;">Aksi</th>
                 </tr>
             </thead>
-
             <tbody>
                 @forelse($items as $item)
                     <tr>
-                        <td style="color: var(--gray-400); font-size: 13px;">{{ $loop->iteration }}</td>
+                        <td style="color:var(--gray-400);font-size:13px;">{{ $loop->iteration }}</td>
 
                         <td>
                             @if ($item->foto)
                                 <img src="{{ asset('storage/' . $item->foto) }}" class="item-thumb"
-                                    alt="{{ $item->name }}">
+                                    alt="{{ $item->name }}" style="cursor:pointer;"
+                                    onclick="previewImage('{{ asset('storage/' . $item->foto) }}', '{{ addslashes($item->name) }}')">
                             @else
                                 <div class="item-thumb-placeholder">
                                     <svg viewBox="0 0 24 24">
@@ -709,7 +803,15 @@
                         </td>
 
                         <td>
-                            <span class="badge" style="background: var(--green-50); color: var(--green-600);">
+                            @if ($item->kode_item)
+                                <span class="kode-badge">{{ $item->kode_item }}</span>
+                            @else
+                                <span style="font-size:12px;color:var(--gray-400);">—</span>
+                            @endif
+                        </td>
+
+                        <td>
+                            <span class="badge" style="background:var(--green-50);color:var(--green-600);">
                                 {{ $item->kategori->nama ?? '-' }}
                             </span>
                         </td>
@@ -724,7 +826,7 @@
                             @endif
                         </td>
 
-                        <td style="font-weight: 500;">
+                        <td style="font-weight:500;">
                             Rp {{ number_format($item->harga, 0, ',', '.') }}
                         </td>
 
@@ -758,10 +860,9 @@
                             </div>
                         </td>
                     </tr>
-
                 @empty
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-state">
                                 <svg viewBox="0 0 24 24">
                                     <circle cx="11" cy="11" r="8" />
@@ -774,23 +875,141 @@
                     </tr>
                 @endforelse
             </tbody>
-
         </table>
     </div>
 
-    {{-- Pagination --}}
-    @if ($items instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <div style="margin-top: 16px; display: flex; justify-content: flex-end;">
-            {{ $items->withQueryString()->links() }}
+    {{-- ══════════════════════════════════════
+         CUSTOM PAGINATION
+    ══════════════════════════════════════ --}}
+    @if ($items instanceof \Illuminate\Pagination\LengthAwarePaginator && $items->hasPages())
+        @php
+            $currentPage = $items->currentPage();
+            $lastPage = $items->lastPage();
+            $prevUrl = $items->previousPageUrl();
+            $nextUrl = $items->nextPageUrl();
+            $firstItem = $items->firstItem();
+            $lastItem = $items->lastItem();
+            $total = $items->total();
+
+            // Query string (search, kategori_id, dll) untuk setiap link
+            $qs = $items->getOptions()['pageName'] ?? 'page';
+
+            // Fungsi bantu: buat URL halaman tertentu
+            $pageUrl = fn(int $p) => $items->url($p);
+
+            // Rentang halaman yang ditampilkan: aktif ± 2, selalu tampilkan 1 & lastPage
+            $window = 2;
+            $pages = collect();
+            for ($i = 1; $i <= $lastPage; $i++) {
+                if ($i === 1 || $i === $lastPage || ($i >= $currentPage - $window && $i <= $currentPage + $window)) {
+                    $pages->push($i);
+                }
+            }
+            // Sisipkan "..." di celah
+            $pagesWithDots = [];
+            $prev = null;
+            foreach ($pages as $p) {
+                if ($prev !== null && $p - $prev > 1) {
+                    $pagesWithDots[] = '...';
+                }
+                $pagesWithDots[] = $p;
+                $prev = $p;
+            }
+        @endphp
+
+        <div class="pagination-wrap">
+
+            {{-- Info teks --}}
+            <p class="pagination-info">
+                Menampilkan <strong>{{ $firstItem }}</strong>–<strong>{{ $lastItem }}</strong>
+                dari <strong>{{ $total }}</strong> data
+            </p>
+
+            {{-- Tombol navigasi --}}
+            <nav class="pagination-nav" aria-label="Navigasi halaman">
+
+                {{-- Tombol First --}}
+                @if ($currentPage <= 1)
+                    <span class="pg-btn disabled" title="Halaman pertama">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="11 17 6 12 11 7" />
+                            <polyline points="18 17 13 12 18 7" />
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $pageUrl(1) }}" class="pg-btn" title="Halaman pertama">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="11 17 6 12 11 7" />
+                            <polyline points="18 17 13 12 18 7" />
+                        </svg>
+                    </a>
+                @endif
+
+                {{-- Tombol Prev --}}
+                @if ($currentPage <= 1)
+                    <span class="pg-btn disabled" title="Sebelumnya">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $prevUrl }}" class="pg-btn" title="Sebelumnya">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                    </a>
+                @endif
+
+                {{-- Nomor halaman --}}
+                @foreach ($pagesWithDots as $p)
+                    @if ($p === '...')
+                        <span class="pg-dots">···</span>
+                    @elseif ($p === $currentPage)
+                        <span class="pg-btn active" aria-current="page">{{ $p }}</span>
+                    @else
+                        <a href="{{ $pageUrl($p) }}" class="pg-btn">{{ $p }}</a>
+                    @endif
+                @endforeach
+
+                {{-- Tombol Next --}}
+                @if ($currentPage >= $lastPage)
+                    <span class="pg-btn disabled" title="Berikutnya">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $nextUrl }}" class="pg-btn" title="Berikutnya">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="9 18 15 12 9 6" />
+                        </svg>
+                    </a>
+                @endif
+
+                {{-- Tombol Last --}}
+                @if ($currentPage >= $lastPage)
+                    <span class="pg-btn disabled" title="Halaman terakhir">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="13 17 18 12 13 7" />
+                            <polyline points="6 17 11 12 6 7" />
+                        </svg>
+                    </span>
+                @else
+                    <a href="{{ $pageUrl($lastPage) }}" class="pg-btn" title="Halaman terakhir">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="13 17 18 12 13 7" />
+                            <polyline points="6 17 11 12 6 7" />
+                        </svg>
+                    </a>
+                @endif
+
+            </nav>
         </div>
     @endif
 
-    {{-- ══════════════════════════════════════
-     MODAL KONFIRMASI HAPUS
-══════════════════════════════════════ --}}
+    {{-- MODAL HAPUS --}}
     <div id="mdlHapus" class="modal-overlay">
         <div class="modal-box">
-
             <div class="modal-header">
                 <div class="modal-icon">
                     <svg viewBox="0 0 24 24">
@@ -802,45 +1021,52 @@
                 <div>
                     <p class="modal-title">Hapus barang?</p>
                     <p class="modal-body">
-                        Data <strong id="mdlNamaBarang" style="color: var(--gray-900);"></strong>
+                        Data <strong id="mdlNamaBarang" style="color:var(--gray-900);"></strong>
                         akan dihapus secara permanen dari sistem. Tindakan ini tidak dapat dibatalkan.
                     </p>
                 </div>
             </div>
-
             <hr class="modal-divider">
-
             <div class="modal-footer">
                 <button type="button" class="btn-modal-cancel" onclick="tutupMdlHapus()">Batal</button>
-                <form id="formHapus" method="POST" style="display: inline;">
+                <form id="formHapus" method="POST" style="display:inline;">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn-modal-confirm">Ya, Hapus</button>
                 </form>
             </div>
+        </div>
+    </div>
 
+    {{-- MODAL PREVIEW GAMBAR --}}
+    <div id="imagePreviewModal"
+        style="display:none;position:fixed;z-index:9999;inset:0;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;padding:20px;">
+        <div
+            style="position:relative;background:white;padding:15px;border-radius:16px;max-width:700px;width:100%;animation:mdlIn .2s ease;">
+            <button onclick="closeImagePreview()"
+                style="position:absolute;top:10px;right:10px;border:none;background:#ef4444;color:white;width:35px;height:35px;border-radius:50%;cursor:pointer;font-size:18px;font-weight:bold;">×</button>
+            <h3 id="previewTitle" style="margin-bottom:15px;color:#111827;"></h3>
+            <div style="display:flex;justify-content:center;">
+                <img id="previewImage" src=""
+                    style="max-width:100%;max-height:70vh;border-radius:12px;object-fit:contain;">
+            </div>
         </div>
     </div>
 
     <script>
-        /* ── Kembalikan fokus ke search bar setelah reload ── */
+        /* ── Fokus search bar setelah reload ── */
         const searchInput = document.getElementById('searchInput');
-
         if (searchInput.value.length > 0) {
             searchInput.focus();
-            // Pindahkan kursor ke akhir teks
             const len = searchInput.value.length;
             searchInput.setSelectionRange(len, len);
         }
 
-        /* ── Auto-search dengan debounce 400ms ── */
+        /* ── Auto-search debounce 400ms ── */
         let debounceTimer;
-
         searchInput.addEventListener('input', function() {
             clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function() {
-                document.getElementById('filterForm').submit();
-            }, 400);
+            debounceTimer = setTimeout(() => document.getElementById('filterForm').submit(), 400);
         });
 
         document.getElementById('kategoriSelect').addEventListener('change', function() {
@@ -849,25 +1075,38 @@
         });
 
         /* ── Modal hapus ── */
-        function bukaMdlHapus(actionUrl, namaBarang) {
-            document.getElementById('formHapus').action = actionUrl;
-            document.getElementById('mdlNamaBarang').textContent = namaBarang;
-            const overlay = document.getElementById('mdlHapus');
-            overlay.style.display = 'flex';
+        function bukaMdlHapus(url, nama) {
+            document.getElementById('formHapus').action = url;
+            document.getElementById('mdlNamaBarang').textContent = nama;
+            document.getElementById('mdlHapus').style.display = 'flex';
         }
 
         function tutupMdlHapus() {
             document.getElementById('mdlHapus').style.display = 'none';
         }
-
-        // Klik area gelap di luar modal → tutup
         document.getElementById('mdlHapus').addEventListener('click', function(e) {
             if (e.target === this) tutupMdlHapus();
         });
 
-        // Escape → tutup
+        /* ── Preview gambar ── */
+        function previewImage(src, title) {
+            document.getElementById('previewImage').src = src;
+            document.getElementById('previewTitle').innerText = title;
+            document.getElementById('imagePreviewModal').style.display = 'flex';
+        }
+
+        function closeImagePreview() {
+            document.getElementById('imagePreviewModal').style.display = 'none';
+        }
+        document.getElementById('imagePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) closeImagePreview();
+        });
+
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') tutupMdlHapus();
+            if (e.key === 'Escape') {
+                tutupMdlHapus();
+                closeImagePreview();
+            }
         });
     </script>
 @endsection

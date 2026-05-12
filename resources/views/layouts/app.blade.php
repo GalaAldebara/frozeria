@@ -596,6 +596,13 @@
                 </svg>
                 Kategori
             </a>
+            <a href="{{ route('bantuan.index') }}" class="{{ request()->routeIs('bantuan.*') ? 'active' : '' }}">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 15a1 1 0 110-2 1 1 0 010 2zm1-4.5c0 .28-.22.5-.5.5h-1a.5.5 0 01-.5-.5v-.5c0-1.1.9-2 2-2a1 1 0 000-2 1 1 0 00-1 1h-2a3 3 0 116 0c0 1.1-.9 2-2 2v.5z" />
+                </svg>
+                Bantuan
+            </a>
         </div>
 
         <div class="navbar-right">

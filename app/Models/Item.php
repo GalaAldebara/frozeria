@@ -17,9 +17,11 @@ class Item extends Model
         'stok',
         'harga',
         'harga_beli',
+        'weight',
         'foto',
         'lokasi',
-        'deskripsi'
+        'deskripsi',
+        'kode_item',
     ];
 
     public function kategori()

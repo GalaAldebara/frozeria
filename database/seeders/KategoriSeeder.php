@@ -12,19 +12,25 @@ class KategoriSeeder extends Seeder
         $data = [
 
             [
+                'kode' => 'AYM',
                 'nama' => 'Ayam',
+                'deskripsi' => 'Kategori produk olahan ayam frozen',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
 
             [
+                'kode' => 'FSN',
                 'nama' => 'Frozen Snack',
+                'deskripsi' => 'Kategori snack frozen food',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
 
             [
+                'kode' => 'SEA',
                 'nama' => 'Seafood',
+                'deskripsi' => 'Kategori seafood beku',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

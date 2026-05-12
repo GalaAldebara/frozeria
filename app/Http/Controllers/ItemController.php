@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
-        public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Item::with('kategori');
 
@@ -23,27 +23,17 @@ class ItemController extends Controller
             $query->where('kategori_id', $request->kategori_id);
         }
 
-        $items = $query->latest()->get();
+        // ✅ Ubah get() → paginate() + appends()
+        $items = $query->latest()->paginate(10)->appends(request()->query());
 
         $kategori = Kategori::all();
-
-        $stokMenipis = Item::where('stok', '<', 20)
-            ->where('stok', '>', 0)
-            ->count();
-
+        $stokMenipis = Item::where('stok', '<', 20)->where('stok', '>', 0)->count();
         $stokHabis = Item::where('stok', 0)->count();
-
         $totalBarang = Item::count();
-
         $totalKategori = Kategori::count();
 
         return view('items.index', compact(
-            'items',
-            'kategori',
-            'stokMenipis',
-            'stokHabis',
-            'totalBarang',
-            'totalKategori',
+            'items', 'kategori', 'stokMenipis', 'stokHabis', 'totalBarang', 'totalKategori',
         ));
     }
 
@@ -55,138 +45,246 @@ class ItemController extends Controller
         return view('items.create', compact('kategori', 'satuan'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'harga_beli' => 'required|numeric',
-            'kategori_id' => 'required|exists:kategoris,id',
-            'satuan_id' => 'required|exists:satuan,id',
-            'foto' => 'nullable|image',
-            'deskripsi' => 'nullable',
-            'lokasi' => 'nullable'
-        ]);
+        public function store(Request $request)
+        {
+            $request->validate([
+                'name' => 'required',
 
-        $foto = null;
+                'stok' => 'required|integer|min:0',
 
-        if ($request->hasFile('foto')) {
+                'weight' => 'nullable|string',
 
-            $foto = $request->file('foto')
-                ->store('items', 'public');
+                'harga' => 'required|numeric|min:0',
+                'harga_beli' => 'required|numeric|min:0',
 
-        }
+                'kategori_id' => 'required|exists:kategoris,id',
+                'satuan_id' => 'required|exists:satuan,id',
 
-        $item = Item::create([
-            'kategori_id' => $request->kategori_id,
-            'satuan_id' => $request->satuan_id,
-            'user_id' => Auth::id(),
-            'name' => $request->name,
-            'stok' => $request->stok,
-            'harga' => $request->harga,
-            'harga_beli' => $request->harga_beli,
-            'foto' => $foto,
-            'deskripsi' => $request->deskripsi,
-            'lokasi' => $request->lokasi,
-        ]);
+                'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
 
-        StokBarang::create([
-            'item_id' => $item->id,
-            'user_id' => Auth::id(),
-            'tipe' => 'MASUK',
-            'jumlah' => $request->stok,
-            'stok_sebelum' => 0,
-            'stok_sesudah' => $request->stok,
-            'keterangan' => 'Tambah barang baru'
-        ]);
+                'deskripsi' => 'nullable',
+                'lokasi' => 'nullable'
+            ]);
 
-        return redirect()
-            ->route('items.index')
-            ->with('success', 'Barang berhasil ditambahkan');
-    }
+            $foto = null;
 
-    public function show(Item $item)
-    {
-        return view('items.show', compact('item'));
-    }
+            if ($request->hasFile('foto')) {
 
-    public function edit(Item $item)
-    {
-        $kategori = Kategori::all();
-        $satuan = Satuan::all();
+                $foto = $request->file('foto')
+                    ->store('items', 'public');
 
-        return view('items.edit', compact(
-            'item',
-            'kategori',
-            'satuan'
-        ));
-    }
+            }
 
-    public function update(Request $request, Item $item)
-    {
-        $request->validate([
-            'name' => 'required',
-            'stok' => 'required|integer',
-            'harga' => 'required|numeric',
-            'harga_beli' => 'required|numeric',
-            'kategori_id' => 'required|exists:kategoris,id',
-            'satuan_id' => 'required|exists:satuan,id',
-            'foto' => 'nullable|image',
-            'deskripsi' => 'nullable',
-            'lokasi' => 'nullable'
-        ]);
+            $kategori = Kategori::findOrFail($request->kategori_id);
+            $satuan = Satuan::findOrFail($request->satuan_id);
 
-        $stokSebelum = $item->stok;
-        $stokSesudah = $request->stok;
+            $prefix =
+                strtoupper($kategori->kode) .
+                '-' .
+                strtoupper($satuan->kode);
 
-        $foto = $item->foto;
+            $itemsDenganPrefix = Item::where(
+                'kode_item',
+                'like',
+                $prefix . '-%'
+            )->pluck('kode_item');
 
-        if ($request->hasFile('foto')) {
+            $nomorTerbesar = 0;
 
-            $foto = $request->file('foto')
-                ->store('items', 'public');
+            foreach ($itemsDenganPrefix as $kode) {
 
-        }
+                $parts = explode('-', $kode);
 
-        $item->update([
-            'kategori_id' => $request->kategori_id,
-            'satuan_id' => $request->satuan_id,
-            'name' => $request->name,
-            'stok' => $stokSesudah,
-            'harga' => $request->harga,
-            'harga_beli' => $request->harga_beli,
-            'foto' => $foto,
-            'deskripsi' => $request->deskripsi,
-            'lokasi' => $request->lokasi,
-        ]);
+                $nomor = (int) end($parts);
 
-        if ($stokSebelum != $stokSesudah) {
+                if ($nomor > $nomorTerbesar) {
 
-            $tipe = $stokSesudah > $stokSebelum
-                ? 'MASUK'
-                : 'KELUAR';
+                    $nomorTerbesar = $nomor;
+
+                }
+            }
+
+            $nomorUrut = $nomorTerbesar + 1;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Generate kode item
+            |--------------------------------------------------------------------------
+            | Contoh:
+            | FV-PCS-001
+            |--------------------------------------------------------------------------
+            */
+
+            $kodeItem =
+                $prefix .
+                '-' .
+                str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan Item
+            |--------------------------------------------------------------------------
+            */
+
+            $item = Item::create([
+                'kode_item' => $kodeItem,
+
+                'kategori_id' => $request->kategori_id,
+                'satuan_id' => $request->satuan_id,
+                'user_id' => Auth::id(),
+
+                'name' => $request->name,
+                'stok' => $request->stok,
+
+                'weight' => $request->weight,
+
+                'harga' => $request->harga,
+                'harga_beli' => $request->harga_beli,
+
+                'foto' => $foto,
+                'deskripsi' => $request->deskripsi,
+                'lokasi' => $request->lokasi,
+            ]);
 
             StokBarang::create([
                 'item_id' => $item->id,
                 'user_id' => Auth::id(),
-                'tipe' => $tipe,
-                'jumlah' => abs($stokSesudah - $stokSebelum),
-                'stok_sebelum' => $stokSebelum,
-                'stok_sesudah' => $stokSesudah,
-                'keterangan' => 'Update stok barang'
+
+                'tipe' => 'MASUK',
+
+                'jumlah' => $request->stok,
+
+                'stok_sebelum' => 0,
+                'stok_sesudah' => $request->stok,
+
+                'keterangan' => 'Tambah barang baru'
             ]);
+
+            return redirect()
+                ->route('items.index')
+                ->with('success', 'Barang berhasil ditambahkan');
         }
 
-        return redirect()
-            ->route('items.index')
-            ->with('success', 'Barang berhasil diupdate');
-    }
+        public function show(Item $item)
+        {
+            return view('items.show', compact('item'));
+        }
+
+        public function edit(Item $item)
+        {
+            $kategori = Kategori::all();
+            $satuan = Satuan::all();
+
+            return view('items.edit', compact(
+                'item',
+                'kategori',
+                'satuan'
+            ));
+        }
+
+        public function update(Request $request, Item $item)
+        {
+            $request->validate([
+                'name' => 'required',
+                'stok' => 'required|integer',
+                'weight' => 'nullable|string',
+                'harga' => 'required|numeric',
+                'harga_beli' => 'required|numeric',
+                'kategori_id' => 'required|exists:kategoris,id',
+                'satuan_id' => 'required|exists:satuan,id',
+                'foto' => 'nullable|image',
+                'deskripsi' => 'nullable',
+                'lokasi' => 'nullable'
+            ]);
+
+            $stokSebelum = $item->stok;
+            $stokSesudah = $request->stok;
+
+            $foto = $item->foto;
+
+            // upload foto baru
+            if ($request->hasFile('foto')) {
+
+                $foto = $request->file('foto')
+                    ->store('items', 'public');
+
+            }
+
+            $kategori = Kategori::findOrFail($request->kategori_id);
+            $satuan = Satuan::findOrFail($request->satuan_id);
+
+            $kodeKategori = strtoupper($kategori->kode);
+            $kodeSatuan = strtoupper($satuan->kode);
+
+            $prefix = $kodeKategori . '-' . $kodeSatuan;
+
+            // cek apakah kategori / satuan berubah
+            $kategoriBerubah = $item->kategori_id != $request->kategori_id;
+            $satuanBerubah = $item->satuan_id != $request->satuan_id;
+
+            $kodeItem = $item->kode_item;
+
+            // generate ulang hanya jika kategori/satuan berubah
+            if ($kategoriBerubah || $satuanBerubah) {
+
+                $lastItem = Item::where('kode_item', 'like', $prefix . '-%')
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+                $nomorUrut = 1;
+
+                if ($lastItem) {
+
+                    $lastNumber = (int) substr($lastItem->kode_item, -3);
+
+                    $nomorUrut = $lastNumber + 1;
+                }
+
+                $kodeItem = $prefix . '-' . str_pad($nomorUrut, 3, '0', STR_PAD_LEFT);
+            }
+
+            // update item
+            $item->update([
+                'kategori_id' => $request->kategori_id,
+                'satuan_id' => $request->satuan_id,
+                'name' => $request->name,
+                'kode_item' => $kodeItem,
+                'stok' => $stokSesudah,
+                'weight' => $request->weight,
+                'harga' => $request->harga,
+                'harga_beli' => $request->harga_beli,
+                'foto' => $foto,
+                'deskripsi' => $request->deskripsi,
+                'lokasi' => $request->lokasi,
+            ]);
+
+            // simpan histori stok
+            if ($stokSebelum != $stokSesudah) {
+
+                $tipe = $stokSesudah > $stokSebelum
+                    ? 'MASUK'
+                    : 'KELUAR';
+
+                StokBarang::create([
+                    'item_id' => $item->id,
+                    'user_id' => Auth::id(),
+                    'tipe' => $tipe,
+                    'jumlah' => abs($stokSesudah - $stokSebelum),
+                    'stok_sebelum' => $stokSebelum,
+                    'stok_sesudah' => $stokSesudah,
+                    'keterangan' => 'Update stok barang'
+                ]);
+            }
+
+            return redirect()
+                ->route('items.index')
+                ->with('success', 'Barang berhasil diupdate');
+        }
 
         public function destroy(Item $item)
-    {
-        $item->delete();
+        {
+            $item->delete();
 
-        return redirect()->route('items.index');
-    }
+            return redirect()->route('items.index');
+        }
 }
